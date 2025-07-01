@@ -1,5 +1,34 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: jnlp
+                    image: jenkins/inbound-agent:latest
+                    command:
+                    - jenkins-agent
+                  - name: kaniko
+                    image: gcr.io/kaniko-project/executor:latest
+                    command:
+                    - /busybox/sleep
+                    args:
+                    - 99d
+                    volumeMounts:
+                    - name: kaniko-secret
+                      mountPath: /kaniko/.docker
+                  volumes:
+                  - name: kaniko-secret
+                    secret:
+                      secretName: kaniko-secret
+                      items:
+                      - key: .dockerconfigjson
+                        path: config.json
+            '''
+        }
+    }
     
     environment {
         REGISTRY = 'ghcr.io'
@@ -21,31 +50,27 @@ pipeline {
         
         stage('Build and Push Docker Image') {
             steps {
-                script {
-                    // Build the Docker image using Kaniko
-                    echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    sh """
-                        docker run --rm \
-                            -v \${WORKSPACE}:/workspace \
-                            -v /var/run/docker.sock:/var/run/docker.sock \
-                            gcr.io/kaniko-project/executor:latest \
-                            --dockerfile /workspace/Dockerfile \
-                            --context /workspace \
-                            --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
-                            --cache=true
-                    """
-                    
-                    echo "Building Docker image: ${DOCKER_IMAGE}:latest"
-                    sh """
-                        docker run --rm \
-                            -v \${WORKSPACE}:/workspace \
-                            -v /var/run/docker.sock:/var/run/docker.sock \
-                            gcr.io/kaniko-project/executor:latest \
-                            --dockerfile /workspace/Dockerfile \
-                            --context /workspace \
-                            --destination ${DOCKER_IMAGE}:latest \
-                            --cache=true
-                    """
+                container('kaniko') {
+                    script {
+                        // Build and push the Docker image using Kaniko
+                        echo "Building and pushing Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                        sh """
+                            /kaniko/executor \
+                                --dockerfile /workspace/Dockerfile \
+                                --context /workspace \
+                                --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
+                                --cache=true
+                        """
+                        
+                        echo "Building and pushing Docker image: ${DOCKER_IMAGE}:latest"
+                        sh """
+                            /kaniko/executor \
+                                --dockerfile /workspace/Dockerfile \
+                                --context /workspace \
+                                --destination ${DOCKER_IMAGE}:latest \
+                                --cache=true
+                        """
+                    }
                 }
             }
         }
