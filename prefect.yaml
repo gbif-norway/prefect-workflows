@@ -1,0 +1,15 @@
+prefect-version: 2.10.21
+
+name: acme-automations
+
+build:
+  - prefect: recipe
+
+deployments:
+  - name: example
+    work_pool: my-k8s-pool
+    entrypoint: src/automations/flows/example_flow.py:example
+    job_variables:
+      image: ghcr.io/ACME/automations:latest
+      env:
+        EXECUTION_ENV: prod 

@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "acme-automations"
+version = "0.1.0"
+description = "ACME Automations - Production-ready Prefect 3 workflows"
+authors = ["ACME Team <team@acme.com>"]
+readme = "README.md"
+packages = [{include = "automations", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+prefect = "^3.3.7"
+boto3 = "^1.34.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.0.0"
+isort = "^5.12.0"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"] 
