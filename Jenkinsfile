@@ -6,17 +6,11 @@ pipeline {
                 kind: Pod
                 spec:
                   containers:
-                  - name: jnlp
-                    image: jenkins/inbound-agent:latest
-                    command:
-                    - jenkins-agent
                   - name: kaniko
-                    image: gcr.io/kaniko-project/executor:latest
+                    image: gcr.io/kaniko-project/executor:debug
                     command:
-                    - tail
-                    args:
-                    - -f
-                    - /dev/null
+                    - /busybox/cat
+                    tty: true
                     volumeMounts:
                     - name: kaniko-secret
                       mountPath: /kaniko/.docker
