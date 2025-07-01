@@ -13,9 +13,10 @@ pipeline {
                   - name: kaniko
                     image: gcr.io/kaniko-project/executor:latest
                     command:
-                    - /busybox/sleep
+                    - tail
                     args:
-                    - 99d
+                    - -f
+                    - /dev/null
                     volumeMounts:
                     - name: kaniko-secret
                       mountPath: /kaniko/.docker
