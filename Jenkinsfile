@@ -1,5 +1,30 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: kaniko
+                    image: gcr.io/kaniko-project/executor:latest
+                    command:
+                    - /busybox/sleep
+                    args:
+                    - 99d
+                    volumeMounts:
+                    - name: kaniko-secret
+                      mountPath: /kaniko/.docker
+                  volumes:
+                  - name: kaniko-secret
+                    secret:
+                      secretName: docker-registry-secret
+                      items:
+                      - key: .dockerconfigjson
+                        path: config.json
+            '''
+        }
+    }
     
     environment {
         REGISTRY = 'ghcr.io'
@@ -19,28 +44,28 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
-                script {
-                    // Build the Docker image
-                    echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                    docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                    echo "Building Docker image: ${DOCKER_IMAGE}:latest"
-                    docker.build("${DOCKER_IMAGE}:latest")
-                }
-            }
-        }
-        
-        stage('Push Docker Image') {
-            when {
-                branch 'main'
-            }
-            steps {
-                script {
-                    // Login to registry using Jenkins credentials
-                    docker.withRegistry("https://${REGISTRY}", 'docker-registry-credentials') {
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_NUMBER}").push()
-                        docker.image("${DOCKER_IMAGE}:latest").push()
+                container('kaniko') {
+                    script {
+                        // Build the Docker image using Kaniko
+                        echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                        sh """
+                            /kaniko/executor \
+                                --dockerfile /workspace/Dockerfile \
+                                --context /workspace \
+                                --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
+                                --cache=true
+                        """
+                        
+                        echo "Building Docker image: ${DOCKER_IMAGE}:latest"
+                        sh """
+                            /kaniko/executor \
+                                --dockerfile /workspace/Dockerfile \
+                                --context /workspace \
+                                --destination ${DOCKER_IMAGE}:latest \
+                                --cache=true
+                        """
                     }
                 }
             }
