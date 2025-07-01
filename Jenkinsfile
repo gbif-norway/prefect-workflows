@@ -79,10 +79,8 @@ pipeline {
     
     post {
         always {
-            node('any') {
-                // Clean up Docker images
-                sh 'docker system prune -f'
-            }
+            // Clean up Docker images
+            sh 'docker system prune -f'
         }
         success {
             echo 'Pipeline completed successfully!'
