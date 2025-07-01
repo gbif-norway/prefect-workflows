@@ -13,7 +13,7 @@ WORKDIR /app
 COPY pyproject.toml ./
 
 # Install dependencies
-RUN poetry install --only=main --no-dev
+RUN poetry install --only=main
 
 # Copy source code
 COPY src/ ./src/
