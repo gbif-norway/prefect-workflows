@@ -5,9 +5,6 @@ pipeline {
         REGISTRY = 'ghcr.io'
         IMAGE_NAME = 'gbifnorway/automations'
         DOCKER_IMAGE = "${REGISTRY}/${IMAGE_NAME}"
-        // Prefect configuration for deployment - make optional for testing
-        PREFECT_API_URL = credentials('prefect-api-url') ?: ''
-        PREFECT_API_KEY = credentials('prefect-api-key') ?: ''
     }
     
     options {
@@ -49,19 +46,26 @@ pipeline {
         
         stage('Deploy to Prefect') {
             when {
-                allOf {
-                    branch 'main'
-                    expression { 
-                        return env.PREFECT_API_URL != '' && env.PREFECT_API_KEY != '' 
-                    }
-                }
+                branch 'main'
             }
             steps {
                 script {
+                    // Get Prefect credentials if available
+                    def prefectApiUrl = ''
+                    def prefectApiKey = ''
+                    
+                    try {
+                        prefectApiUrl = credentials('prefect-api-url')
+                        prefectApiKey = credentials('prefect-api-key')
+                    } catch (Exception e) {
+                        echo "Prefect credentials not available, skipping deployment"
+                        return
+                    }
+                    
                     // Configure Prefect client for deployment
                     sh '''
-                        prefect config set PREFECT_API_URL=${PREFECT_API_URL}
-                        prefect config set PREFECT_API_KEY=${PREFECT_API_KEY}
+                        prefect config set PREFECT_API_URL=${prefectApiUrl}
+                        prefect config set PREFECT_API_KEY=${prefectApiKey}
                     '''
                     
                     // Deploy to Prefect using the built image
@@ -75,7 +79,7 @@ pipeline {
     
     post {
         always {
-            node {
+            node('any') {
                 // Clean up Docker images
                 sh 'docker system prune -f'
             }
