@@ -1,30 +1,5 @@
 pipeline {
-    agent {
-        kubernetes {
-            yaml '''
-                apiVersion: v1
-                kind: Pod
-                spec:
-                  containers:
-                  - name: kaniko
-                    image: gcr.io/kaniko-project/executor:latest
-                    command:
-                    - /busybox/sleep
-                    args:
-                    - 99d
-                    volumeMounts:
-                    - name: kaniko-secret
-                      mountPath: /kaniko/.docker
-                  volumes:
-                  - name: kaniko-secret
-                    secret:
-                      secretName: kaniko-secret
-                      items:
-                      - key: .dockerconfigjson
-                        path: config.json
-            '''
-        }
-    }
+    agent any
     
     environment {
         REGISTRY = 'ghcr.io'
@@ -46,27 +21,31 @@ pipeline {
         
         stage('Build and Push Docker Image') {
             steps {
-                container('kaniko') {
-                    script {
-                        // Build the Docker image using Kaniko
-                        echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-                        sh """
-                            /kaniko/executor \
-                                --dockerfile /workspace/Dockerfile \
-                                --context /workspace \
-                                --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
-                                --cache=true
-                        """
-                        
-                        echo "Building Docker image: ${DOCKER_IMAGE}:latest"
-                        sh """
-                            /kaniko/executor \
-                                --dockerfile /workspace/Dockerfile \
-                                --context /workspace \
-                                --destination ${DOCKER_IMAGE}:latest \
-                                --cache=true
-                        """
-                    }
+                script {
+                    // Build the Docker image using Kaniko
+                    echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                    sh """
+                        docker run --rm \
+                            -v \${WORKSPACE}:/workspace \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            gcr.io/kaniko-project/executor:latest \
+                            --dockerfile /workspace/Dockerfile \
+                            --context /workspace \
+                            --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
+                            --cache=true
+                    """
+                    
+                    echo "Building Docker image: ${DOCKER_IMAGE}:latest"
+                    sh """
+                        docker run --rm \
+                            -v \${WORKSPACE}:/workspace \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            gcr.io/kaniko-project/executor:latest \
+                            --dockerfile /workspace/Dockerfile \
+                            --context /workspace \
+                            --destination ${DOCKER_IMAGE}:latest \
+                            --cache=true
+                    """
                 }
             }
         }
@@ -105,10 +84,6 @@ pipeline {
     }
     
     post {
-        always {
-            // Clean up Docker images
-            sh 'docker system prune -f'
-        }
         success {
             echo 'Pipeline completed successfully!'
         }
