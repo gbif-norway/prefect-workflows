@@ -26,9 +26,9 @@ pipeline {
     }
     
     environment {
-        REGISTRY = 'ghcr.io'
-        IMAGE_NAME = 'gbifnorway/automations'
-        DOCKER_IMAGE = "${REGISTRY}/${IMAGE_NAME}"
+        REGISTRY = 'docker.io'
+        IMAGE_NAME = 'gbifnorway/prefect-automations'
+        DOCKER_IMAGE = "${IMAGE_NAME}"  // Docker Hub doesn't need registry prefix
     }
     
     options {
