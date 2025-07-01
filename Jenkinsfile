@@ -23,7 +23,9 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
+                    echo "Building Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                     docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    echo "Building Docker image: ${DOCKER_IMAGE}:latest"
                     docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
