@@ -34,40 +34,45 @@ A production-ready Prefect 3 automation repository with Docker packaging and Kub
 
 ## CI/CD with Jenkins
 
-This repository includes Jenkins integration with Prefect secrets management:
+This repository includes Jenkins integration with clean separation of concerns:
+
+### Architecture
+
+- **Jenkins**: Handles build-time credentials (Docker registry, Git access)
+- **Prefect**: Manages runtime environment variables for K8s clusters
 
 ### Setup Jenkins Integration
 
-1. **Configure Prefect connection in Jenkins:**
+1. **Configure Jenkins credentials:**
    ```bash
-   # Set these as Jenkins credentials
-   PREFECT_API_URL="https://your-prefect-instance.com"
-   PREFECT_API_KEY="your-prefect-api-key"
+   # Add these as Jenkins credentials
+   - prefect-api-url: "https://your-prefect-instance.com"
+   - prefect-api-key: "your-prefect-api-key"
+   - docker-registry-credentials: "username/password for Docker registry"
    ```
 
-2. **Set up secrets in Prefect:**
+2. **Set up runtime secrets in Prefect:**
    ```bash
-   # Use the provided setup script
-   ./scripts/setup_jenkins_prefect.sh
-   
-   # Or manually create secrets
-   prefect secret create docker-registry-username "your-username"
-   prefect secret create docker-registry-password "your-password"
+   # Runtime environment variables for K8s clusters
+   prefect secret create database-url "postgresql://user:pass@host:port/db"
+   prefect secret create external-api-keys "key1,key2,key3"
+   prefect secret create k8s-namespace "production"
+   prefect secret create k8s-service-account "prefect-worker"
    ```
 
 3. **Run the Jenkins pipeline:**
-   - The pipeline will automatically retrieve secrets from Prefect
-   - Docker images are built and pushed to your registry
-   - Flows are deployed to your Prefect instance
+   - Uses Jenkins credentials for Docker registry access
+   - Deploys flows to Prefect with runtime secret access
+   - Flows retrieve runtime secrets when executing in K8s
 
-### Benefits of Prefect Secrets
+### Benefits of This Approach
 
-- **Centralized management**: All secrets stored in Prefect
-- **Better security**: Encrypted and access-controlled
-- **Audit trail**: All secret access is logged
-- **Integration**: Seamless with your Prefect workflows
+- **Clear separation**: Build vs runtime concerns
+- **Security**: Jenkins handles build secrets, Prefect handles runtime secrets
+- **Scalability**: Runtime secrets can be updated without rebuilding
+- **Compliance**: Different access controls for different environments
 
-See [Jenkins Integration Guide](docs/jenkins_prefect_integration.md) for detailed setup instructions.
+See [Architecture Guide](docs/architecture.md) for detailed design and [Jenkins Integration Guide](docs/jenkins_prefect_integration.md) for setup instructions.
 
 ## Architecture
 
