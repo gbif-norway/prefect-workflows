@@ -51,8 +51,8 @@ pipeline {
                         echo "Building and pushing Docker image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                         sh """
                             /kaniko/executor \
-                                --dockerfile /workspace/Dockerfile \
-                                --context /workspace \
+                                --dockerfile \${WORKSPACE}/Dockerfile \
+                                --context \${WORKSPACE} \
                                 --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
                                 --cache=true
                         """
@@ -60,8 +60,8 @@ pipeline {
                         echo "Building and pushing Docker image: ${DOCKER_IMAGE}:latest"
                         sh """
                             /kaniko/executor \
-                                --dockerfile /workspace/Dockerfile \
-                                --context /workspace \
+                                --dockerfile \${WORKSPACE}/Dockerfile \
+                                --context \${WORKSPACE} \
                                 --destination ${DOCKER_IMAGE}:latest \
                                 --cache=true
                         """
