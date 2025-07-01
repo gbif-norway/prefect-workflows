@@ -18,7 +18,7 @@ pipeline {
                   volumes:
                   - name: kaniko-secret
                     secret:
-                      secretName: docker-registry-secret
+                      secretName: kaniko-secret
                       items:
                       - key: .dockerconfigjson
                         path: config.json
