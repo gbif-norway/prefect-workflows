@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         REGISTRY = 'ghcr.io'
-        IMAGE_NAME = 'ACME/automations'
+        IMAGE_NAME = 'gbifnorway/automations'
         DOCKER_IMAGE = "${REGISTRY}/${IMAGE_NAME}"
         // Prefect configuration for deployment
         PREFECT_API_URL = credentials('prefect-api-url')

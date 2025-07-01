@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "acme-automations"
+name = "gbifnorway-automations"
 version = "0.1.0"
-description = "ACME Automations - Production-ready Prefect 3 workflows"
-authors = ["ACME Team <team@acme.com>"]
+description = "GBIF Norway Automations - Production-ready Prefect 3 workflows"
+authors = ["GBIF Norway Team <team@gbif.no>"]
 readme = "README.md"
 packages = [{include = "automations", from = "src"}]
 

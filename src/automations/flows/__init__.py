@@ -1,1 +1,1 @@
-"""Flow definitions for ACME automations.""" 
+"""Flow definitions for GBIF Norway automations.""" 

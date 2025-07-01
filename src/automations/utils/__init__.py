@@ -1,1 +1,1 @@
-"""Utility functions for ACME automations.""" 
+"""Utility functions for GBIF Norway automations.""" 

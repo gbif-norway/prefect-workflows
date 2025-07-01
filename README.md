@@ -1,4 +1,4 @@
-# ACME Automations
+# GBIF Norway Automations
 
 A production-ready Prefect 3 automation repository with Docker packaging and Kubernetes deployment.
 
@@ -7,7 +7,7 @@ A production-ready Prefect 3 automation repository with Docker packaging and Kub
 1. **Clone and setup:**
    ```bash
    git clone <repository-url>
-   cd ACME-automations
+   cd gbifnorway-automations
    poetry install
    ```
 

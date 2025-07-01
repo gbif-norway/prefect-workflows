@@ -1,6 +1,6 @@
 prefect-version: 2.10.21
 
-name: acme-automations
+name: gbifnorway-automations
 
 build:
   - prefect: recipe
@@ -10,6 +10,6 @@ deployments:
     work_pool: my-k8s-pool
     entrypoint: src/automations/flows/example_flow.py:example
     job_variables:
-      image: ghcr.io/ACME/automations:latest
+      image: ghcr.io/gbifnorway/automations:latest
       env:
         EXECUTION_ENV: prod 
