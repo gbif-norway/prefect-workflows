@@ -3,8 +3,11 @@ FROM prefecthq/prefect:3.3.7-python3.12
 # Set working directory
 WORKDIR /app
 
-# Install additional dependencies directly with pip
-RUN pip install boto3>=1.34.0
+# Install uv for faster package installation
+RUN pip install uv
+
+# Install additional dependencies with uv (much faster than pip)
+RUN uv pip install --system boto3>=1.34.0
 
 # Copy source code
 COPY src/ ./src/
