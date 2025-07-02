@@ -3,10 +3,19 @@ Website availability checker using Prefect flows.
 """
 
 from prefect import flow, task
+from prefect.blocks.kubernetes import KubernetesClusterConfig
 import requests
 from typing import List, Dict, Any
 import time
 from urllib.parse import urlparse
+
+# Load Kubernetes cluster configuration
+try:
+    cluster_config_block = KubernetesClusterConfig.load("gbif-cluster")
+    print(f"✅ Loaded Kubernetes cluster config: {cluster_config_block.name}")
+except Exception as e:
+    print(f"⚠️  Warning: Could not load Kubernetes cluster config: {e}")
+    cluster_config_block = None
 
 
 @task
@@ -81,6 +90,55 @@ def check_website_validity(url: str, timeout: int = 10) -> Dict[str, Any]:
 
 
 @task
+def verify_kubernetes_connection() -> Dict[str, Any]:
+    """
+    Verify that the Kubernetes cluster connection is working.
+    
+    Returns:
+        Dictionary with connection status
+    """
+    if not cluster_config_block:
+        return {
+            "connected": False,
+            "error": "No Kubernetes cluster config available"
+        }
+    
+    try:
+        # Try to get cluster info using the config
+        import subprocess
+        import json
+        
+        # Use kubectl to get cluster info
+        result = subprocess.run(
+            ["kubectl", "cluster-info"], 
+            capture_output=True, 
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            return {
+                "connected": True,
+                "cluster_name": cluster_config_block.name,
+                "context": cluster_config_block.context_name,
+                "info": result.stdout.strip()
+            }
+        else:
+            return {
+                "connected": False,
+                "error": result.stderr.strip(),
+                "cluster_name": cluster_config_block.name
+            }
+            
+    except Exception as e:
+        return {
+            "connected": False,
+            "error": str(e),
+            "cluster_name": cluster_config_block.name if cluster_config_block else None
+        }
+
+
+@task
 def summarize_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Summarize the website check results.
@@ -133,7 +191,25 @@ def check_multiple_websites(urls: List[str], timeout: int = 10) -> Dict[str, Any
         Complete results including individual checks and summary
     """
     print(f"🌐 Starting website availability check for {len(urls)} URLs...")
-    print(f"⏱️  Timeout set to {timeout} seconds per request\n")
+    print(f"⏱️  Timeout set to {timeout} seconds per request")
+    
+    # Log Kubernetes cluster info if available
+    if cluster_config_block:
+        print(f"🔧 Using Kubernetes cluster: {cluster_config_block.name}")
+        print(f"   Context: {cluster_config_block.context_name}")
+    else:
+        print("🔧 Running without Kubernetes cluster configuration")
+    
+    print()
+    
+    # Optionally verify Kubernetes connection
+    k8s_status = verify_kubernetes_connection()
+    if k8s_status["connected"]:
+        print(f"✅ Kubernetes connection verified: {k8s_status['cluster_name']}")
+    else:
+        print(f"⚠️  Kubernetes connection issue: {k8s_status.get('error', 'Unknown error')}")
+    
+    print()
     
     # Check each website
     results = []
@@ -147,7 +223,9 @@ def check_multiple_websites(urls: List[str], timeout: int = 10) -> Dict[str, Any
     return {
         "individual_results": results,
         "summary": summary,
-        "timestamp": time.time()
+        "timestamp": time.time(),
+        "kubernetes_cluster": cluster_config_block.name if cluster_config_block else None,
+        "kubernetes_status": k8s_status
     }
 
 
