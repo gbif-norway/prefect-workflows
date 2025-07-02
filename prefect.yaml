@@ -6,9 +6,20 @@ build:
   - prefect: recipe
 
 deployments:
-  - name: example
+  - name: url-checker
     work_pool: k8s-pool
-    entrypoint: src/automations/flows/example_flow.py:example
+    entrypoint: src/automations/flows/check_multiple_websites.py:check_multiple_websites
+    schedule:
+      cron: "0 * * * *"  # Run every hour at minute 0
+    parameters:
+      urls:
+        - "https://www.gbif.org"
+        - "https://api.gbif.org/v1/species"
+        - "https://www.github.com"
+        - "https://prefect.io"
+        - "https://docs.prefect.io"
+        - "https://www.python.org"
+      timeout: 15
     job_variables:
       image: gbifnorway/prefect-automations:latest
       env:
