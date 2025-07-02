@@ -6,8 +6,11 @@ WORKDIR /app
 # Install uv for faster package installation
 RUN pip install uv
 
-# Install additional dependencies with uv (much faster than pip)
-RUN uv pip install --system boto3>=1.34.0
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies from requirements.txt with uv (much faster than pip)
+RUN uv pip install --system -r requirements.txt
 
 # Copy source code
 COPY src/ ./src/

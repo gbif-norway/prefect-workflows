@@ -96,7 +96,7 @@ pipeline {
                     
                     // Deploy to Prefect using the built image
                     sh '''
-                        prefect deploy -n example -p my-k8s-pool
+                        prefect deploy -n example -p k8s-pool
                     '''
                 }
             }
