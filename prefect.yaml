@@ -1,27 +1,48 @@
-prefect-version: 2.10.21
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
 
-name: gbifnorway-automations
+# Generic metadata about this project
+name: prefect-workflows
+prefect-version: 3.4.7
 
-build:
-  - prefect: recipe
+# build section allows you to manage and build docker images
+build: null
 
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for cloning this project in remote locations
+pull:
+- prefect.deployments.steps.git_clone:
+    repository: https://github.com/gbif-norway/prefect-workflows.git
+    branch: main
+
+# the deployments section allows you to provide configuration for deploying flows
 deployments:
-  - name: url-checker
-    work_pool: gbif-cluster
-    entrypoint: src/automations/flows/check_multiple_websites.py:check_multiple_websites
-    schedule:
-      cron: "0 * * * *"  # Run every hour at minute 0
-    parameters:
-      urls:
-        - "https://www.gbif.org"
-        - "https://api.gbif.org/v1/species"
-        - "https://www.github.com"
-        - "https://prefect.io"
-        - "https://docs.prefect.io"
-        - "https://www.python.org"
-      timeout: 15
-    job_variables:
-      image: gbifnorway/prefect-automations:latest
-      env:
-        EXECUTION_ENV: prod
-        
+- name: url-checker
+  version: null
+  tags: []
+  concurrency_limit: null
+  description: "Flow to check the availability of multiple websites.\n\nArgs:\n  \
+    \  urls: List of URLs to check\n    timeout: Request timeout in seconds for each\
+    \ URL\n    \nReturns:\n    Complete results including individual checks and summary"
+  entrypoint: src/automations/flows/check_multiple_websites.py:check_multiple_websites
+  parameters:
+    urls:
+    - https://www.gbif.org
+    - https://api.gbif.org/v1/species
+    - https://www.github.com
+    - https://prefect.io
+    - https://docs.prefect.io
+    - https://www.python.org
+    timeout: 15
+  work_pool:
+    name: gbif-automations
+    work_queue_name: null
+    job_variables: {}
+  schedules:
+  - cron: 0 * * * *
+    timezone: null
+    day_or: true
+    active: true
