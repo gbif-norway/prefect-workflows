@@ -40,6 +40,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                script {
+                    echo "Current branch: ${env.BRANCH_NAME}"
+                    echo "Git branch: ${sh(script: 'git branch --show-current', returnStdout: true).trim()}"
+                }
             }
         }
         
@@ -70,7 +74,10 @@ pipeline {
         
         stage('Deploy to Prefect') {
             when {
-                branch 'main'
+                anyOf {
+                    branch 'main'
+                    environment name: 'BRANCH_NAME', value: 'main'
+                }
             }
             steps {
                 script {
