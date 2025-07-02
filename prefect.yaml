@@ -7,7 +7,7 @@ build:
 
 deployments:
   - name: url-checker
-    work_pool: k8s-pool
+    work_pool: gbif-cluster
     entrypoint: src/automations/flows/check_multiple_websites.py:check_multiple_websites
     schedule:
       cron: "0 * * * *"  # Run every hour at minute 0
