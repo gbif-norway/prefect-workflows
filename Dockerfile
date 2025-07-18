@@ -18,5 +18,5 @@ COPY src/ ./src/
 # Set Python path
 ENV PYTHONPATH=/app/src:$PYTHONPATH
 
-# Default command
-CMD ["prefect", "worker", "start", "-p", "my-k8s-pool"] 
+# Default command (can be overridden in deployment)
+CMD ["prefect", "worker", "start", "-p", "gbif-automations"] 
